@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(rm_driver)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+ add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -58,8 +58,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate services in the 'srv' folder
 # add_service_files(
 #   FILES
-#   Service1.srv
-#   Service2.srv
+#   Joint_Max_Speed.srv
 # )
 
 ## Generate actions in the 'action' folder
@@ -201,5 +200,5 @@ include_directories(
 # catkin_add_nosetests(test)
 add_executable(rm_driver src/rm_driver.cpp src/cJSON.c)
 target_link_libraries(rm_driver ${catkin_LIBRARIES})
-add_dependencies(rm_driver rm_driver_generate_messages_cpp)
-add_definitions(-std=c99) 
+#add_dependencies(rm_driver rm_driver_generate_messages_cpp)
+#add_definitions(-std=c99) 

@@ -212,8 +212,3 @@ include_directories(
 
 add_executable(rm_control src/rm_control.cpp)
 target_link_libraries(rm_control ${catkin_LIBRARIES} )
-
-add_executable(movej_commander src/movej_commander.cpp)
-target_link_libraries(movej_commander
-  ${catkin_LIBRARIES}
-)
