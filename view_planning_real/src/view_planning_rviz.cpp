@@ -197,9 +197,7 @@ int main(int argc, char** argv)
         }
 
         
-
-        
-
+        // 生成视点  
         std::vector<geometry_msgs::Pose> viewpoints = generateFanViewpoints(
             object_center_in_baselink,
             num_viewpoints,
@@ -210,7 +208,6 @@ int main(int argc, char** argv)
         );
 
         
-
         // ================= RViz 显示 =================
         visual_tools.deleteAllMarkers();
 
@@ -236,11 +233,41 @@ int main(int argc, char** argv)
         {
             ROS_INFO_STREAM("===== Executing viewpoint " << i << " =====");
 
+            // // version 1： 翻滚
+            // group.clearPoseTargets();
+            // group.setPoseTarget(viewpoints[i], "Link6");
+
+            // version 2： 不朝后看
             group.clearPoseTargets();
+            group.clearPathConstraints();   // ✅ 先清一次，防止残留
+
             group.setPoseTarget(viewpoints[i], "Link6");
+
+            // ================= 姿态路径约束 =================
+            moveit_msgs::OrientationConstraint ocm;
+            ocm.link_name = "Link6";
+            ocm.header.frame_id = "base_link_wheeltec";
+
+            // ✅ 使用“该视点的朝向”作为约束中心
+            ocm.orientation = viewpoints[i].orientation;
+
+            // ✅ 关键参数（非常重要）
+            double angle_thresh = 18.0;  // 允许偏差角度（度）
+            ocm.absolute_x_axis_tolerance = angle_thresh / 180 * M_PI;   // X 轴（看向物体）几乎不允许偏  2.86°
+            ocm.absolute_y_axis_tolerance = angle_thresh / 180 * M_PI;
+            ocm.absolute_z_axis_tolerance = angle_thresh / 180 * M_PI;   // ✅ 允许绕视线方向转（roll 自由）
+
+            ocm.weight = 1.0;
+
+            moveit_msgs::Constraints path_constraints;
+            path_constraints.orientation_constraints.push_back(ocm);
+            group.setPathConstraints(path_constraints);
+
 
             moveit::planning_interface::MoveGroupInterface::Plan plan;
             moveit::planning_interface::MoveItErrorCode success = group.plan(plan);
+            // ✅ version 2：  非常重要：立刻清掉约束
+            group.clearPathConstraints();
 
             if (success != moveit::planning_interface::MoveItErrorCode::SUCCESS)
             {
