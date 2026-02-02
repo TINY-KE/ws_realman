@@ -12,24 +12,26 @@
     + 启动turn_on_wheeltec_robot.launch 中的movebase
     + sudo apt-get install ros-noetic-costmap-converter  ros-noetic-mbf-costmap-core   ros-noetic-mbf-msgs
 
++ 键盘 
+roslaunch wheeltec_robot_rc keyboard_teleop.launch
+
+
 
 + 雷达
  roslaunch urg_node urg_lidar.launch 
 
-+ KINECT dk 相机
-roslaunch azure_kinect_ros_driver driver.launch
+<!-- + KINECT dk 相机
+roslaunch azure_kinect_ros_driver driver.launch -->
 
 
 + 激光建图
 source ~/ws_cartographer/devel_isolated/setup.bash && roslaunch cartographer_ros wheeltec_2d_real.launch 
 
-+ 键盘 
-roslaunch wheeltec_robot_rc keyboard_teleop.launch
 
 
 + 机械臂
-roslaunch rm_control rm_control.launch 
-roslaunch rm_bringup rm_robot.launch 
+<!-- roslaunch rm_control rm_control.launch 
+roslaunch rm_bringup rm_robot.launch  -->
 roslaunch rm_bringup rm_robot_bringup_and_control.launch 
 
 + 实机视点规划
