@@ -58,7 +58,7 @@
 <!-- 修改轮子关节类型：continuous -> revolute -->
 <!-- 前左轮 -->
 <joint name="left_front_joint" type="revolute">
-  <origin xyz="0.191 0.201  0.0375" rpy="1.57 0 0"/>
+  <origin xyz="0.191 0.202  0.0375" rpy="1.57 0 0"/>
   <parent link="base_link_wheeltec"/>
   <child link="left_front_link"/>
   <axis xyz="0 1 0"/>
@@ -96,7 +96,7 @@
 
 <!-- 前右轮 -->
 <joint name="right_front_joint" type="revolute">
-  <origin xyz="0.191 -0.201  0.0375" rpy="1.57 0 0"/>
+  <origin xyz="0.191 -0.202  0.0375" rpy="1.57 0 0"/>
   <parent link="base_link_wheeltec"/>
   <child link="right_front_link"/>
   <axis xyz="0 1 0"/>
@@ -134,7 +134,7 @@
 
 <!-- 后左轮 -->
 <joint name="left_wheel_joint" type="revolute">
-  <origin xyz="-0.191 0.201  0.0375" rpy="1.57 0 0"/>
+  <origin xyz="-0.191 0.202  0.0375" rpy="1.57 0 0"/>
   <parent link="base_link_wheeltec"/>
   <child link="left_wheel_link"/>
   <axis xyz="0 1 0"/>
@@ -172,7 +172,7 @@
 
 <!-- 后右轮 -->
 <joint name="right_wheel_joint" type="revolute">
-  <origin xyz="-0.191 -0.201  0.0375" rpy="1.57 0 0"/>
+  <origin xyz="-0.191 -0.202  0.0375" rpy="1.57 0 0"/>
   <parent link="base_link_wheeltec"/>
   <child link="right_wheel_link"/>
   <axis xyz="0 1 0"/>
