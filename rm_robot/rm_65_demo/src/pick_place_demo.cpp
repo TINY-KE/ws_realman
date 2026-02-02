@@ -119,7 +119,7 @@ int main(int argc, char** argv)
     target_pose1.orientation.y = 0.711007;
     target_pose1.orientation.z = -1.912e-05;
 
-    target_pose1.position.x = 0.406138;
+    target_pose1.position.x = -0.406138;
     target_pose1.position.y = 0.00100714;
     target_pose1.position.z = 0.478058;
     group.setPoseTarget(target_pose1, "Link6");

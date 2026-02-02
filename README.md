@@ -35,7 +35,7 @@ roslaunch rm_bringup rm_robot.launch  -->
 roslaunch rm_bringup rm_robot_bringup_and_control.launch 
 
 + 实机视点规划
-rosrun view_planning_real view_planning_real
+rosrun view_planning_real 
 
 + 
 rostopic pub /object_centor geometry_msgs/PointStamped "header:
@@ -71,7 +71,9 @@ speed: 0.5"
     + 修改 robot_model_visualization.launch中 mini_4wd 对应的 laser坐标系的位置  (54/2cm-2.5cm = 27-2.5cm = 24.5cm = 0.245m)
     + 启动turn_on_wheeltec_robot.launch 中的movebase
     + sudo apt-get install ros-noetic-costmap-converter  ros-noetic-mbf-costmap-core   ros-noetic-mbf-msgs
+    + /home/robotlab/ws_realman/src/rm_robot/rm_65_description/urdf/rm_65.urdf.xacro  
 
+    
 + 键盘 
 roslaunch wheeltec_robot_rc keyboard_teleop.launch
 
