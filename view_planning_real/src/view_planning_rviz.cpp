@@ -218,7 +218,7 @@ int main(int argc, char** argv)
             visual_tools.publishSphere(
                 viewpoints[i].position,
                 rviz_visual_tools::BLUE,
-                rviz_visual_tools::LARGE,
+                rviz_visual_tools::MEDIUM,
                 "viewpoint_" + std::to_string(i)
             );
 
@@ -226,7 +226,7 @@ int main(int argc, char** argv)
             visual_tools.publishAxisLabeled(
                 viewpoints[i],    // 位姿（位置+方向）
                 "vp_" + std::to_string(i),       // 文字标签
-                rviz_visual_tools::LARGE            // 轴的大小
+                rviz_visual_tools::MEDIUM            // 轴的大小
             );
         }
 
@@ -258,7 +258,7 @@ int main(int argc, char** argv)
 
             ROS_INFO_STREAM("Viewpoint " << i << " executed successfully");
 
-            // ros::Duration(1.0).sleep();  // ✅ 给传感器/相机时间
+            ros::Duration(0.4).sleep();  // ✅ 给传感器/相机时间
         }
         group.setNamedTarget("zero");
         moveit::planning_interface::MoveGroupInterface::Plan home_plan;
