@@ -7,6 +7,8 @@ Panels:
         - /Global Options1
         - /MotionPlanning1
         - /LaserScan1
+        - /MarkerArray1
+        - /object_centor1
       Splitter Ratio: 0.7425600290298462
     Tree Height: 593
   - Class: rviz/Help
@@ -282,14 +284,32 @@ Visualization Manager:
       Unreliable: false
       Use Timestamp: false
       Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /rviz_visual_tools
+      Name: MarkerArray
+      Namespaces:
+        Text: true
+        viewpoint_0: true
+        viewpoint_1: true
+        viewpoint_2: true
+        viewpoint_3: true
+        viewpoint_4: true
+        vp_0: true
+        vp_1: true
+        vp_2: true
+        vp_3: true
+        vp_4: true
+      Queue Size: 100
+      Value: true
     - Alpha: 1
       Class: rviz/PointStamped
       Color: 204; 41; 204
       Enabled: true
       History Length: 1
-      Name: PointStamped
+      Name: object_centor
       Queue Size: 10
-      Radius: 0.20000000298023224
+      Radius: 0.4000000059604645
       Topic: /object_centor
       Unreliable: false
       Value: true
@@ -309,7 +329,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 8.243961334228516
+      Distance: 3.717775344848633
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -317,17 +337,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -0.20940852165222168
-        Y: -0.019567683339118958
-        Z: 1.0430871100197692e-07
+        X: 0.8146448135375977
+        Y: -0.29648357629776
+        Z: -7.301563300643465e-07
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.10479670763015747
+      Pitch: 0.5797966718673706
       Target Frame: dummy
-      Yaw: 1.5867587327957153
+      Yaw: 3.8317697048187256
     Saved: ~
 Window Geometry:
   Displays:

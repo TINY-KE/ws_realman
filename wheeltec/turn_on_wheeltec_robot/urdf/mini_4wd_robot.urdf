@@ -1,11 +1,25 @@
 <?xml version="1.0" ?>
 <robot name="wheeltec_robot">
 
-    <link name="base_link_wheeltec">
+    <!-- <link name="base_link_wheeltec">
         <visual>
             <origin xyz=" 0 0 0.0975" rpy="0 0 0" />
             <geometry>
                 <box size="0.27 0.185 0.055"/>
+            </geometry>
+            <material name="white">
+                <color rgba="1 1 1 1"/>
+            </material>
+        </visual>
+    </link>    -->
+
+    <!-- 只修改底盘外壳尺寸：40cm宽(0.4m)，50cm长(0.5m)，13cm高(0.13m) -->
+    <!-- 轮子位置保持不变 -->
+    <link name="base_link_wheeltec">
+        <visual>
+            <origin xyz="0 0 0.065" rpy="0 0 0" />  <!-- 高度中心：13cm/2=6.5cm -->
+            <geometry>
+                <box size="0.5 0.4 0.13"/>  <!-- 长×宽×高：50cm×40cm×13cm -->
             </geometry>
             <material name="white">
                 <color rgba="1 1 1 1"/>

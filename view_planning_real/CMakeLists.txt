@@ -42,6 +42,9 @@ target_link_libraries(view_planning_real ${catkin_LIBRARIES})
 add_executable(view_planning_gazebo src/view_planning_gazebo.cpp)
 target_link_libraries(view_planning_gazebo ${catkin_LIBRARIES})
 
+add_executable(view_planning_rviz src/view_planning_rviz.cpp)
+target_link_libraries(view_planning_rviz ${catkin_LIBRARIES})
+
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/view_planning_real.cpp

@@ -4,6 +4,20 @@
 <xacro:include filename="$(find rm_65_description)/urdf/rm_65.gazebo.xacro"/>
 
 <!-- =========================== 添加虚拟根链接解决KDL问题 =========================== -->
+<link name="world"/>
+
+<link name="virtual_base_link">
+  <inertial>
+    <mass value="0.001"/>
+    <inertia ixx="0.000001" ixy="0.0" ixz="0.0" iyy="0.000001" iyz="0.0" izz="0.000001"/>
+  </inertial>
+</link>
+
+<joint name="world_to_virtual_joint" type="fixed">
+  <parent link="world"/>
+  <child link="virtual_base_link"/>
+  <origin xyz="0 0 0" rpy="0 0 0"/>
+</joint>
 
 <!-- 修改原来的base_link_wheeltec惯性参数 -->
 <link name="base_link_wheeltec">
@@ -19,7 +33,7 @@
       iyz="0.0"
       izz="0.001"/>
   </inertial>
-  <!-- <visual>
+  <visual>
     <origin xyz="0 0 0.0975" rpy="0 0 0" />
     <geometry>
       <box size="0.27 0.185 0.055"/>
@@ -27,15 +41,6 @@
     <material name="white">
       <color rgba="1 1 1 1"/>
     </material>
-  </visual> -->
-   <visual>
-      <origin xyz="0 0 0.17" rpy="0 0 0" />  <!-- 高度中心：13cm/2=6.5cm -->
-      <geometry>
-          <box size="0.5 0.4 0.34"/>  <!-- 长×宽×高：50cm×40cm×13cm -->
-      </geometry>
-      <material name="white">
-          <color rgba="1 1 1 1"/>
-      </material>
   </visual>
   <collision>
     <origin xyz="0 0 0.0975" rpy="0 0 0" />
@@ -45,6 +50,11 @@
   </collision>
 </link>
 
+<joint name="virtual_to_wheeltec_joint" type="fixed">
+  <parent link="virtual_base_link"/>
+  <child link="base_link_wheeltec"/>
+  <origin xyz="0 0 0" rpy="0 0 0"/>
+</joint>
 
 <!-- 添加Gazebo物理属性 -->
 <gazebo reference="base_link_wheeltec">
@@ -228,7 +238,7 @@
 
 <!-- =========================== RM-65 Arm Base =========================== -->
 <joint name="wheeltec_to_arm_joint" type="fixed">
-  <origin xyz="0 0 0.34" rpy="0 0 3.1415926"/>
+  <origin xyz="0 0 0.4" rpy="0 0 3.1415926"/>
   <parent link="base_link_wheeltec"/>
   <child link="base_link"/>
 </joint>
