@@ -289,17 +289,7 @@ Visualization Manager:
       Marker Topic: /rviz_visual_tools
       Name: ViewPoints
       Namespaces:
-        Text: true
-        viewpoint_0: true
-        viewpoint_1: true
-        viewpoint_2: true
-        viewpoint_3: true
-        viewpoint_4: true
-        vp_0: true
-        vp_1: true
-        vp_2: true
-        vp_3: true
-        vp_4: true
+        {}
       Queue Size: 100
       Value: true
     - Alpha: 1
@@ -312,6 +302,14 @@ Visualization Manager:
       Radius: 0.4000000059604645
       Topic: /object_centor
       Unreliable: false
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /ellipsoid_marker
+      Name: ellipsoid
+      Namespaces:
+        {}
+      Queue Size: 100
       Value: true
   Enabled: true
   Global Options:
@@ -329,7 +327,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 2.0949039459228516
+      Distance: 3.5756168365478516
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -345,9 +343,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.6647965908050537
+      Pitch: 0.5697965621948242
       Target Frame: dummy
-      Yaw: 4.021780490875244
+      Yaw: 3.4017796516418457
     Saved: ~
 Window Geometry:
   Displays:

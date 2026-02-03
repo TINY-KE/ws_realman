@@ -38,16 +38,7 @@ roslaunch rm_bringup rm_robot_bringup_and_control.launch
 rosrun view_planning_real 
 
 + 
-rostopic pub /object_centor geometry_msgs/PointStamped "header:
-  seq: 0
-  stamp:
-    secs: 0
-    nsecs: 0
-  frame_id: ''
-point:
-  x: 0.0
-  y: 1.0
-  z: 0.0"
+rostopic pub /object_ellipsoid std_msgs/Float64MultiArray "data: [1.0, 0.0, 0.5,    0, 0, 0,   1, 2, 1 ]"
 
 rostopic pub /stop_loop std_msgs/Bool  "data: false" 
 

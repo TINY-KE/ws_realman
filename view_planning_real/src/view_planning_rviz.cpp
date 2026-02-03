@@ -220,6 +220,7 @@ int main(int argc, char** argv)
                 "vp_" + std::to_string(i));
         }
 
+        
         // ================= MoveIt 执行 =================
         for (size_t i = 0; i < viewpoints.size(); ++i)
         {

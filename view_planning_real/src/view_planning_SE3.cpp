@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <std_msgs/Bool.h>
 #include <geometry_msgs/PointStamped.h>
+#include <std_msgs/Float64MultiArray.h>
 
 #include <tf2_ros/transform_listener.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
@@ -15,20 +16,75 @@
 #include <moveit_msgs/CollisionObject.h>
 #include <moveit/robot_trajectory/robot_trajectory.h>
 #include <moveit/trajectory_processing/iterative_time_parameterization.h>
+#include <visualization_msgs/Marker.h>
+
 
 // ================= 全局变量 =================
 bool loop = false;
 geometry_msgs::PointStamped object_center_in_world;
+std_msgs::Float64MultiArray ellipsoid_in_world;
+ros::Publisher marker_pub;
+
 
 // ================= 回调函数 =================
-void startCallback(const geometry_msgs::PointStamped::ConstPtr& msg)
+void ellipsoidCallback(const std_msgs::Float64MultiArray::ConstPtr& msg)
 {
-    object_center_in_world = *msg;
+    if (msg->data.size() < 9)
+    {
+        ROS_WARN("Ellipsoid array size < 9");
+        return;
+    }
+
+    // ✅ 保存椭球数组
+    ellipsoid_in_world = *msg;
+
+    // ✅ 提取中心点
+    object_center_in_world.header.stamp = ros::Time::now();
+    object_center_in_world.header.frame_id = "map";
+    object_center_in_world.point.x = msg->data[0];
+    object_center_in_world.point.y = msg->data[1];
+    object_center_in_world.point.z = msg->data[2];
+
+    // ✅ 构造 RViz 椭球 Marker
+    visualization_msgs::Marker ellipsoid_marker;
+    ellipsoid_marker.header.frame_id = "map";
+    ellipsoid_marker.header.stamp = ros::Time::now();
+    ellipsoid_marker.ns = "ellipsoid";
+    ellipsoid_marker.id = 0;
+    ellipsoid_marker.type = visualization_msgs::Marker::SPHERE;
+    ellipsoid_marker.action = visualization_msgs::Marker::ADD;
+
+    // 位置
+    ellipsoid_marker.pose.position.x = msg->data[0];
+    ellipsoid_marker.pose.position.y = msg->data[1];
+    ellipsoid_marker.pose.position.z = msg->data[2];
+
+    // 姿态（暂时只用 yaw，roll/pitch 以后可加）
+    tf2::Quaternion q;
+    q.setRPY(msg->data[3], msg->data[4], msg->data[5]);
+    ellipsoid_marker.pose.orientation = tf2::toMsg(q);
+
+    // ✅ 椭球尺寸（scale = 长宽高）
+    ellipsoid_marker.scale.x = msg->data[6];
+    ellipsoid_marker.scale.y = msg->data[7];
+    ellipsoid_marker.scale.z = msg->data[8];
+
+    // ✅ 颜色 & 透明度
+    ellipsoid_marker.color.r = 0.1f;
+    ellipsoid_marker.color.g = 0.8f;
+    ellipsoid_marker.color.b = 0.2f;
+    ellipsoid_marker.color.a = 1.0f;   // 半透明
+
+    ellipsoid_marker.lifetime = ros::Duration(0); // 一直存在
+
+    marker_pub.publish(ellipsoid_marker);
+
     loop = true;
 
-    ROS_INFO("Received object center in frame [%s]: (%.2f, %.2f, %.2f)",
-             msg->header.frame_id.c_str(),
-             msg->point.x, msg->point.y, msg->point.z);
+    ROS_INFO("Ellipsoid received: "
+             "pos(%.2f %.2f %.2f), size(%.2f %.2f %.2f)",
+             msg->data[0], msg->data[1], msg->data[2],
+             msg->data[6], msg->data[7], msg->data[8]);
 }
 
 void stopCallback(const std_msgs::Bool::ConstPtr& msg)
@@ -60,36 +116,18 @@ bool transformPoint(const tf2_ros::Buffer& tfBuffer,
     }
 }
 
-// ============================================================
-// ✅ 感知包络模型（新增，不依赖椭球）
-// ============================================================
-double effectiveTargetHeight(double theta)
-{
-    // 连续、非正弦、非对称
-    return 0.30
-         + 0.06 * cos(1.2 * theta)
-         + 0.04 * sin(2.0 * theta)
-         + 0.02 * cos(0.7 * theta);
-}
-
-// ============================================================
-// ✅ 新版：感知 + FOV 驱动的扇形视点生成
-//     （函数名、参数保持不变，主函数无需改）
-// ============================================================
+// ================= 生成扇形视点 =================
 std::vector<geometry_msgs::Pose> generateFanViewpoints(
     const geometry_msgs::PointStamped& object_center_in_baselink,
     int num_viewpoints,
     double radius,
-    double /* height 参数保留但不再直接使用 */,
+    double height,
     double angle_min,
     double angle_max)
 {
     double x = object_center_in_baselink.point.x;
     double y = object_center_in_baselink.point.y;
     double z = object_center_in_baselink.point.z;
-
-    // ✅ 相机垂直视场角（工程上合理的固定值）
-    const double fov_vertical = 45.0 / 180.0 * M_PI;
 
     tf2::Vector3 obj_pos(x, y, z);
     tf2::Vector3 dir_obj_to_robot = -obj_pos;
@@ -98,35 +136,18 @@ std::vector<geometry_msgs::Pose> generateFanViewpoints(
     std::vector<geometry_msgs::Pose> viewpoints;
     viewpoints.reserve(num_viewpoints);
 
-    for (int i = 0; i < num_viewpoints; ++i)
-    {
-        double ratio =
-            (num_viewpoints == 1)
-            ? 0.5
-            : double(i) / (num_viewpoints - 1);
-
-        double theta =
-            base_angle
-          + angle_min
-          + ratio * (angle_max - angle_min);
-
-        // ✅ 感知包络 → 有效目标高度
-        double h_eff = effectiveTargetHeight(theta);
-
-        // ✅ FOV 约束 → 被动计算相机高度
-        double cam_height =
-            h_eff / tan(fov_vertical / 2.0) + 0.05;
+    for (int i = 0; i < num_viewpoints; ++i) {
+        double ratio = (num_viewpoints == 1) ? 0.5 : double(i) / (num_viewpoints - 1);
+        double theta = base_angle + angle_min + ratio * (angle_max - angle_min);
 
         geometry_msgs::Pose vp;
         vp.position.x = x + radius * cos(theta);
         vp.position.y = y + radius * sin(theta);
-        vp.position.z = z + cam_height;
+        vp.position.z = z + height;
 
-        // ===== 姿态：始终看向目标点 =====
-        tf2::Vector3 x_cam(
-            x - vp.position.x,
-            y - vp.position.y,
-            z - vp.position.z);
+        tf2::Vector3 x_cam(x - vp.position.x,
+                           y - vp.position.y,
+                           z - vp.position.z);
         x_cam.normalize();
 
         tf2::Vector3 z_world(0, 0, 1);
@@ -144,7 +165,6 @@ std::vector<geometry_msgs::Pose> generateFanViewpoints(
 
         viewpoints.push_back(vp);
     }
-
     return viewpoints;
 }
 
@@ -171,10 +191,11 @@ int main(int argc, char** argv)
     group.setMaxVelocityScalingFactor(0.3);
     group.setMaxAccelerationScalingFactor(0.3);
 
-    ros::Subscriber start_sub =
-        nh.subscribe("/object_centor", 1, startCallback);
+    ros::Subscriber ellipsoid_sub =
+        nh.subscribe("/object_ellipsoid", 1, ellipsoidCallback);
     ros::Subscriber stop_sub =
         nh.subscribe("/stop_loop", 1, stopCallback);
+    marker_pub =  nh.advertise<visualization_msgs::Marker>( "ellipsoid_marker", 1);
 
     ros::Rate rate(10.0);
     ROS_INFO("Waiting for object center...");
@@ -196,14 +217,22 @@ int main(int argc, char** argv)
             rate.sleep();
             continue;
         }
-
-        auto viewpoints = generateFanViewpoints(
+        // ================= 视点参数 =================
+        const int num_viewpoints = 5;
+        const double radius = 1.0;
+        const double height = 0.6;
+        const double angle_min = -10.0 / 180.0 * M_PI;
+        const double angle_max =  10.0 / 180.0 * M_PI;
+        // 生成视点  
+        std::vector<geometry_msgs::Pose> viewpoints = generateFanViewpoints(
             object_center_in_baselink,
-            5,                      // 视点数
-            1.0,                    // 半径
-            0.6,                    // 占位参数（不再直接使用）
-           -10.0 / 180.0 * M_PI,
-            10.0 / 180.0 * M_PI);
+            num_viewpoints,
+            radius,
+            height,
+            angle_min,
+            angle_max
+        );
+
 
         visual_tools.deleteAllMarkers();
 
@@ -220,7 +249,6 @@ int main(int argc, char** argv)
                 "vp_" + std::to_string(i));
         }
 
-        
         // ================= MoveIt 执行 =================
         for (size_t i = 0; i < viewpoints.size(); ++i)
         {
