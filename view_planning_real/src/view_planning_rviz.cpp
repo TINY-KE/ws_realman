@@ -37,7 +37,7 @@ void stopCallback(const std_msgs::Bool::ConstPtr& msg)
     ROS_INFO("Stop signal received.");
 }
 
-// ================= 坐标变换 =================
+// ================= 坐标变换（保持你原来的写法） =================
 bool transformPoint(const tf2_ros::Buffer& tfBuffer,
                     const std::string& target_frame,
                     const geometry_msgs::PointStamped& input,
@@ -60,18 +60,36 @@ bool transformPoint(const tf2_ros::Buffer& tfBuffer,
     }
 }
 
-// ================= 生成扇形视点 =================
+// ============================================================
+// ✅ 感知包络模型（新增，不依赖椭球）
+// ============================================================
+double effectiveTargetHeight(double theta)
+{
+    // 连续、非正弦、非对称
+    return 0.30
+         + 0.06 * cos(1.2 * theta)
+         + 0.04 * sin(2.0 * theta)
+         + 0.02 * cos(0.7 * theta);
+}
+
+// ============================================================
+// ✅ 新版：感知 + FOV 驱动的扇形视点生成
+//     （函数名、参数保持不变，主函数无需改）
+// ============================================================
 std::vector<geometry_msgs::Pose> generateFanViewpoints(
     const geometry_msgs::PointStamped& object_center_in_baselink,
     int num_viewpoints,
     double radius,
-    double height,
+    double /* height 参数保留但不再直接使用 */,
     double angle_min,
     double angle_max)
 {
     double x = object_center_in_baselink.point.x;
     double y = object_center_in_baselink.point.y;
     double z = object_center_in_baselink.point.z;
+
+    // ✅ 相机垂直视场角（工程上合理的固定值）
+    const double fov_vertical = 45.0 / 180.0 * M_PI;
 
     tf2::Vector3 obj_pos(x, y, z);
     tf2::Vector3 dir_obj_to_robot = -obj_pos;
@@ -80,18 +98,35 @@ std::vector<geometry_msgs::Pose> generateFanViewpoints(
     std::vector<geometry_msgs::Pose> viewpoints;
     viewpoints.reserve(num_viewpoints);
 
-    for (int i = 0; i < num_viewpoints; ++i) {
-        double ratio = (num_viewpoints == 1) ? 0.5 : double(i) / (num_viewpoints - 1);
-        double theta = base_angle + angle_min + ratio * (angle_max - angle_min);
+    for (int i = 0; i < num_viewpoints; ++i)
+    {
+        double ratio =
+            (num_viewpoints == 1)
+            ? 0.5
+            : double(i) / (num_viewpoints - 1);
+
+        double theta =
+            base_angle
+          + angle_min
+          + ratio * (angle_max - angle_min);
+
+        // ✅ 感知包络 → 有效目标高度
+        double h_eff = effectiveTargetHeight(theta);
+
+        // ✅ FOV 约束 → 被动计算相机高度
+        double cam_height =
+            h_eff / tan(fov_vertical / 2.0) + 0.05;
 
         geometry_msgs::Pose vp;
         vp.position.x = x + radius * cos(theta);
         vp.position.y = y + radius * sin(theta);
-        vp.position.z = z + height;
+        vp.position.z = z + cam_height;
 
-        tf2::Vector3 x_cam(x - vp.position.x,
-                           y - vp.position.y,
-                           z - vp.position.z);
+        // ===== 姿态：始终看向目标点 =====
+        tf2::Vector3 x_cam(
+            x - vp.position.x,
+            y - vp.position.y,
+            z - vp.position.z);
         x_cam.normalize();
 
         tf2::Vector3 z_world(0, 0, 1);
@@ -109,6 +144,7 @@ std::vector<geometry_msgs::Pose> generateFanViewpoints(
 
         viewpoints.push_back(vp);
     }
+
     return viewpoints;
 }
 
@@ -131,7 +167,7 @@ int main(int argc, char** argv)
     group.setGoalPositionTolerance(0.02);
     group.setGoalOrientationTolerance(0.05);
     group.setPlanningTime(1.5);
-    group.setNumPlanningAttempts(1);              // ✅ Joint-space 稳定
+    group.setNumPlanningAttempts(1);
     group.setMaxVelocityScalingFactor(0.3);
     group.setMaxAccelerationScalingFactor(0.3);
 
@@ -152,39 +188,44 @@ int main(int argc, char** argv)
         }
 
         geometry_msgs::PointStamped object_center_in_baselink;
-        if (!transformPoint(tfBuffer, "base_link_wheeltec",
+        if (!transformPoint(tfBuffer,
+                             "base_link_wheeltec",
                              object_center_in_world,
-                             object_center_in_baselink)) {
+                             object_center_in_baselink))
+        {
             rate.sleep();
             continue;
         }
 
         auto viewpoints = generateFanViewpoints(
             object_center_in_baselink,
-            5, 1.0, 0.6,
-            -10.0 / 180.0 * M_PI,
-             10.0 / 180.0 * M_PI);
+            5,                      // 视点数
+            1.0,                    // 半径
+            0.6,                    // 占位参数（不再直接使用）
+           -10.0 / 180.0 * M_PI,
+            10.0 / 180.0 * M_PI);
 
         visual_tools.deleteAllMarkers();
 
         for (size_t i = 0; i < viewpoints.size(); ++i)
         {
-            visual_tools.publishSphere(viewpoints[i].position,
-                                       rviz_visual_tools::BLUE,
-                                       rviz_visual_tools::MEDIUM,
-                                       "vp_sphere_" + std::to_string(i));
-            visual_tools.publishAxisLabeled(viewpoints[i],
-                                            "vp_" + std::to_string(i));
+            visual_tools.publishSphere(
+                viewpoints[i].position,
+                rviz_visual_tools::BLUE,
+                rviz_visual_tools::MEDIUM,
+                "vp_sphere_" + std::to_string(i));
+
+            visual_tools.publishAxisLabeled(
+                viewpoints[i],
+                "vp_" + std::to_string(i));
         }
 
-        // ================= MoveIt 执行（关键修改在这里） =================
+        // ================= MoveIt 执行 =================
         for (size_t i = 0; i < viewpoints.size(); ++i)
         {
             ROS_INFO_STREAM("===== Executing viewpoint " << i << " =====");
 
-            // ✅ Joint‑space 正则化核心：当前状态作为参考
             group.setStartState(*group.getCurrentState());
-
             group.clearPoseTargets();
             group.setPoseTarget(viewpoints[i], "Link6");
 
@@ -217,5 +258,6 @@ int main(int argc, char** argv)
         visual_tools.trigger();
         rate.sleep();
     }
+
     return 0;
 }
