@@ -8,7 +8,7 @@ using namespace gpmp2;
 
 ArmModel* generateArm(string arm_type){
     ArmModel* arm_model;
-    if(arm_type=="realman"){    //rm_75
+    if(arm_type=="realman75"){    //rm_75
         //1. 机械臂DH模型
         gtsam::Vector alpha(7);  alpha << -M_PI/2, M_PI/2, -M_PI/2, M_PI/2, -M_PI/2, M_PI/2, 0;
         gtsam::Vector a(7);      a << 0, 0, 0, 0, 0, 0, 0;
@@ -57,6 +57,69 @@ ArmModel* generateArm(string arm_type){
         arm_model = new ArmModel(abs_arm, body_spheres);
         std::cout<<"构建realman机械臂模型成功"<<std::endl;
     }
+
+    else if(arm_type=="realman65"){    // rm_65 - 6自由度机械臂
+
+        gtsam::Vector alpha(6);  alpha << -M_PI/2, 0, M_PI/2, -M_PI/2, M_PI/2, 0;
+        gtsam::Vector a(6);      a << 0, 0.256, 0, 0.0, 0, 0;
+        gtsam::Vector d(6);      d << 0.2405, 0, 0, 0.210, 0, 0.144;
+        gtsam::Vector theta(6);  theta << 0, -M_PI/2, M_PI/2, 0, 0, 0;
+    
+        gtsam::Pose3 base_pose =
+            gtsam::Pose3(gtsam::Rot3::RzRyRx(0, 0, 0),
+                        gtsam::Point3(0, 0, 0));
+
+
+        Arm abs_arm(6, a, alpha, d, base_pose, theta);
+
+        // 2. 用于碰撞检测的球（保持你 rm_75 / WAM 的风格）
+        // 格式: {关节id, x, y, z, 半径}
+        std::vector<std::vector<double>> spheres_data = {
+            
+            {0, 0.0, 0.25, 0,    0.09},   // 基座下部
+            {0, 0.0, 0.12, 0,    0.05},   // 基座下部
+
+            // ===== 关节0 - 基座 (d1=0.2405) =====
+            // 基座底部到关节1，沿z轴分布
+            {0, 0.0, 0.0, 0.0,    0.08},   // 关节0原点
+
+            // ===== 关节1 - 连杆2 (a2=0.256，沿x轴) =====
+            // 这是水平的连杆，沿x轴分布
+            {1, 0.0,  0.0, 0.0,   0.07},   // 关节1原点
+            {1, -0.13, 0.0, 0.0,  0.05},   // 接近关节2
+            
+            // {2, 0.0, 0.0, -0.05,  0.05},    
+            {2, 0.0, 0.0, 0.11,   0.04},
+
+            // ===== 关节3 - 连杆4 (d4=0.210，沿z轴) =====
+            {3, 0.0, 0.0, 0.0,    0.06},  // 关节3原点
+            
+
+            // ===== 关节5 - 末端执行器 (d6=0.144) =====
+            {5, 0.0, 0.0, 0.0,    0.035},  // 关节5原点
+            {5, 0.0, 0.0, -0.05,   0.035},   // 末端
+        };
+
+
+        BodySphereVector body_spheres;
+        body_spheres.clear();
+        for(int i = 0; i < spheres_data.size(); i++){
+            BodySphere sphere(
+                spheres_data[i][0],
+                spheres_data[i][4],
+                Point3(spheres_data[i][1],
+                    spheres_data[i][2],
+                    spheres_data[i][3])
+            );
+            body_spheres.push_back(sphere);
+        }
+
+        // 3. 生成机械臂模型
+        arm_model = new ArmModel(abs_arm, body_spheres);
+        std::cout << "构建 realman65 机械臂模型成功" << std::endl;
+    }
+
+
     else if(arm_type=="WAMArm-origin"){ //WAM
         //1. 机械臂DH模型
         gtsam::Vector alpha(7);  alpha << -M_PI/2, M_PI/2, -M_PI/2, M_PI/2, -M_PI/2, M_PI/2, 0;
@@ -109,6 +172,7 @@ ArmModel* generateArm(string arm_type){
         arm_model = new ArmModel(abs_arm, body_spheres);
         std::cout<<"构建WAMArm机械臂模型成功"<<std::endl;
     }
+
     else if(arm_type=="WAMArm"){ //WAM
         //1. 机械臂DH模型
         gtsam::Vector alpha(7);  alpha << -M_PI/2, M_PI/2, -M_PI/2, M_PI/2, -M_PI/2, M_PI/2, 0;

@@ -18,6 +18,16 @@
 #include <moveit/trajectory_processing/iterative_time_parameterization.h>
 #include <visualization_msgs/Marker.h>
 
+// 视场可视化
+#include "Viewer.h"
+#include "MapObject.h"
+#include "GenerateArm.h"
+#include "ConverterTools.h"
+#include "Converter.h"
+#include "Map.h"
+#include <thread>
+
+
 
 // ================= 全局变量 =================
 bool loop = false;
@@ -176,6 +186,38 @@ int main(int argc, char** argv)
     ros::AsyncSpinner spinner(1);
     spinner.start();
 
+
+
+    //二、生成机械臂、相机参数
+    //（1）生成机械臂
+    ArmModel *arm_model = generateArm("realman65");
+    //（2）生成相机参数
+    int CameraWidth = 640;
+    int CameraHeight = 480;
+    float fx = 554.254691191187;
+    float fy = 554.254691191187;
+    float cx = 320.5;
+    float cy = 240.5;
+    Eigen::Matrix3d Calib;
+    Calib << fx, 0, cx,
+            0, fy, cy,
+            0, 0, 1;
+    // (3) 规划轨迹中差值的数量
+    int circle_divides = 240;
+    // （4）最佳视场的横向减小值
+    int FovDecrease = 20;    //这里可能得设置为145.因为之前的程序一直没设置成功 
+    if(argc>1)
+        FovDecrease = atoi(argv[1]);
+    // int FovDecrease = 20;  //为了可视化效果好，减小   
+    double FOVDepth = 4.0; // 1.0用于截图， 6.0用于建图
+    // 地图
+    ObjectMap *map = new ObjectMap(nh);
+    std::thread *mptMap;
+    mptMap = new std::thread(&ObjectMap::Run, map);
+
+    
+
+
     tf2_ros::Buffer tfBuffer;
     tf2_ros::TransformListener tfListener(tfBuffer);
 
@@ -190,6 +232,26 @@ int main(int argc, char** argv)
     group.setNumPlanningAttempts(1);
     group.setMaxVelocityScalingFactor(0.3);
     group.setMaxAccelerationScalingFactor(0.3);
+
+
+    // 三、可视化线程
+    string default_frame = "base_link";
+
+    // Visualize_Tools *vis_tools = new Visualize_Tools(nh, map, default_frame);
+    // std::thread *mptVisualizeTools;
+    // mptVisualizeTools = new std::thread(&Visualize_Tools::Run, vis_tools);
+
+    Visualize_Arm_Tools vis_arm_tools(nh, *arm_model, group, CameraWidth, CameraHeight, Calib, default_frame);
+    vis_arm_tools.setFOVDecrease(FovDecrease);
+    vis_arm_tools.setFOVDepth(FOVDepth);
+    std::thread *mptVisualizeArmTools;
+    mptVisualizeArmTools = new std::thread(&Visualize_Arm_Tools::Run, vis_arm_tools);
+
+
+
+
+
+
 
     ros::Subscriber ellipsoid_sub =
         nh.subscribe("/object_ellipsoid", 1, ellipsoidCallback);

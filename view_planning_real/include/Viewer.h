@@ -45,11 +45,6 @@ class Visualize_Tools{
         void visualize_point(Eigen::Vector3d& p , std::string frame_id, double id, double lifetime = 10);
         void visualize_plane_triangle_bypoint(std::vector<geometry_msgs::Point>& points, int id, std::string frame_id = "world");
         void visualize_plane_rectangle(Eigen::Vector4d plane_param, int id, std::string frame_id = "world");
-        void visualize_gbv_lbv(std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>>& arrows_starts, std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>>& arrows_ends, std::string frame_id);
-        void clean_visualize_gbv_lbv(std::string frame_id);
-        std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> arrows_starts, arrows_ends;
-        void add_arrows_starts_arrows_ends(std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>>& arrows_starts, std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>>& arrows_ends);
-        // void clean_arrows_starts_arrows_ends(std::string frame_id);
 
 
         void Run();
@@ -89,6 +84,9 @@ class Visualize_Tools{
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
 #include "std_msgs/Float64MultiArray.h"
+#include <visualization_msgs/MarkerArray.h>
+
+
 
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/robot_trajectory/robot_trajectory.h>
@@ -146,10 +144,10 @@ public:
 
  //发布机械臂的球体
  private:
-     void publish_collision_spheres(const Eigen::Matrix<double, 7, 1>& conf) ;
+     void publish_collision_spheres(const Eigen::Matrix<double, 6, 1>& conf) ;
 
 
-     void publish_arm_link_spheres(const Eigen::Matrix<double, 7, 1>& conf);
+     void publish_arm_link_spheres(const Eigen::Matrix<double, 6, 1>& conf);
 
 
 //发布相机视场

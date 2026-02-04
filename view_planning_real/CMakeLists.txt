@@ -21,6 +21,45 @@ find_package(catkin REQUIRED COMPONENTS
 
 )
 
+## System dependencies are found with CMake's conventions
+find_package(Boost REQUIRED COMPONENTS system)
+find_package(Eigen3 3.1.0 REQUIRED)
+find_package(gazebo REQUIRED)
+
+
+# Find GTSAM components
+find_package(GTSAM REQUIRED) # Uses installed package
+include_directories(${GTSAM_INCLUDE_DIR})
+set(GTSAM_LIBRARIES gtsam)   # TODO: automatic search libs
+
+find_package(GTSAMCMakeTools)
+include(GtsamMakeConfigFile)
+include(GtsamBuildTypes)
+include(GtsamTesting)
+
+find_package(gpmp2 REQUIRED)
+include_directories(${gpmp2_INCLUDE_DIR})
+
+include_directories(
+        ${GAZEBO_INCLUDE_DIRS}
+        ${EIGEN3_INCLUDE_DIR}
+)
+
+
+set(OpenCV_DIR "/home/robotlab/thirdparty/opencv-3.4.10/build")
+
+find_package(OpenCV 3.0 QUIET)
+if(NOT OpenCV_FOUND)
+    find_package(OpenCV 2.4.3 QUIET)
+    if(NOT OpenCV_FOUND)
+        message(FATAL_ERROR "OpenCV > 2.4.3 not found.")
+    endif()
+endif()
+
+# 包含 OpenCV 头文件路径
+include_directories(${OpenCV_INCLUDE_DIRS})
+
+
 catkin_package(
   CATKIN_DEPENDS roscpp std_msgs tf2_ros geometry_msgs
 )
@@ -32,9 +71,30 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  include
   ${catkin_INCLUDE_DIRS}
+  ${catkin_INCLUDE_DIRS}
+  ${PROJECT_SOURCE_DIR}/include
+  ${PROJECT_SOURCE_DIR}
 )
+
+set(SOURCE_UTILS_FILES
+        src/utils/Plane.cpp
+        src/utils/Converter.cc
+        src/utils/Map.cpp
+        src/utils/MapObject.cpp
+        # src/TeleopMobile.cpp
+        src/utils/Viewer.cpp
+)
+
+add_library(CONVENIENCE_LIB_NAME SHARED
+        ${SOURCE_UTILS_FILES}
+)
+
+target_link_libraries(CONVENIENCE_LIB_NAME
+        ${catkin_LIBRARIES} ${EIGEN3_LIBS} ${GTSAM_LIBRARIES} gpmp2 ${OpenCV_LIBS}
+)
+
 
 add_executable(view_planning_real src/view_planning_real.cpp)
 target_link_libraries(view_planning_real ${catkin_LIBRARIES})
@@ -46,7 +106,7 @@ add_executable(view_planning_rviz src/view_planning_rviz.cpp)
 target_link_libraries(view_planning_rviz ${catkin_LIBRARIES})
 
 add_executable(view_planning_SE3 src/view_planning_SE3.cpp)
-target_link_libraries(view_planning_SE3 ${catkin_LIBRARIES})
+target_link_libraries(view_planning_SE3 CONVENIENCE_LIB_NAME)
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}

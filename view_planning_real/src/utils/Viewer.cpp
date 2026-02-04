@@ -4,9 +4,7 @@
 
 void Visualize_Tools::Run()
 {   
-    ros::Rate r(5);
-
-    int num_for_gbv_lbv = 5;
+    ros::Rate r(500);
 
     while(1){
         auto MapObjects = mpMap->getMapObjects();
@@ -24,15 +22,6 @@ void Visualize_Tools::Run()
             visualize_plane_rectangle(MapPlaneNormals[i], i, default_frame_);
         }
 
-        // 每五次执行一次
-        if (num_for_gbv_lbv > 0) {
-            num_for_gbv_lbv--;
-        } else {
-            clean_visualize_gbv_lbv("world");
-            visualize_gbv_lbv(arrows_starts, arrows_ends, "world");
-            num_for_gbv_lbv = 5; // 重置计数器
-        }
-        
         r.sleep();
     }
 }
@@ -74,64 +63,6 @@ void Visualize_Tools::visualize_point(Eigen::Vector3d& p , std::string frame_id,
 }
 
 
-void Visualize_Tools::visualize_gbv_lbv(std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>>& arrows_starts, std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>>& arrows_ends, std::string frame_id){
-     visualization_msgs::Marker marker;
-    
-    // 基础设置
-    marker.header.frame_id = frame_id;
-    marker.header.stamp = ros::Time::now();
-    marker.ns = "vector_arrows";
-    marker.action = visualization_msgs::Marker::ADD;
-
-    // 类型设置为基本ARROW
-    marker.type = visualization_msgs::Marker::ARROW;
-
-    // 尺寸设置
-    marker.scale.x = 0.05;  // 箭杆直径
-    marker.scale.y = 0.1;   // 箭头直径
-    marker.scale.z = 0.0;   // 不使用
-
-    // 颜色设置
-    marker.color.b = 1.0;
-    marker.color.a = 1.0;
-
-    // 发布每个箭头
-    for(size_t i = 0; i < arrows_starts.size(); ++i) {
-        marker.id = i;  // 关键：每个箭头不同ID
-
-        geometry_msgs::Point start, end;
-        start.x = arrows_starts[i].x();
-        start.y = arrows_starts[i].y();
-        start.z = arrows_starts[i].z();
-        
-        end.x = arrows_ends[i].x();
-        end.y = arrows_ends[i].y();
-        end.z = arrows_ends[i].z();
-
-        marker.points.clear();
-        marker.points.push_back(start);
-        marker.points.push_back(end);
-
-        point_pub.publish(marker);
-    }
-}
-
-void Visualize_Tools::add_arrows_starts_arrows_ends(std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>>& arrows_starts_, std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>>& arrows_ends_){
-    arrows_starts.clear();
-    arrows_starts = arrows_starts_;
-    arrows_ends.clear();
-    arrows_ends = arrows_ends_;
-}
-
-
-void Visualize_Tools::clean_visualize_gbv_lbv(std::string frame_id){
-    // 发送清空指令
-    visualization_msgs::Marker clear_marker;
-    clear_marker.header.frame_id = frame_id; // 必须与原始标记的frame_id一致
-    clear_marker.ns = "vector_arrows";          // 命名空间必须匹配
-    clear_marker.action = visualization_msgs::Marker::DELETEALL;
-    point_pub.publish(clear_marker);
-}
 
 // void Visualize_Tools::visualize_geometry_pose(geometry_msgs::Pose pose, std::string frame_id = "world",  double id_num = 1,  std::string name = "no-name", bool output = false){
 void Visualize_Tools::visualize_geometry_pose(geometry_msgs::Pose pose, std::string frame_id,  double id_num,  std::string name, bool output){
@@ -213,7 +144,7 @@ void publish_plane_triangle(ros::Publisher& marker_pub, Eigen::Vector4d plane_pa
     // 创建一个Marker消息
     // 创建一个 Marker 消息
     visualization_msgs::Marker marker;
-    marker.header.frame_id = "world";  // 使用世界坐标系
+    marker.header.frame_id = frame_id;  // 使用世界坐标系
     marker.header.stamp = ros::Time::now();
     marker.ns = "triangle";
     marker.id = id;
@@ -298,7 +229,7 @@ void Visualize_Tools::visualize_plane_triangle_bypoint(std::vector<geometry_msgs
     
     // 创建一个 Marker 消息
     visualization_msgs::Marker marker;
-    marker.header.frame_id = "world";  // 使用世界坐标系
+    marker.header.frame_id = frame_id;  // 使用世界坐标系
     marker.header.stamp = ros::Time::now();
     marker.ns = "triangle";
     marker.id = id;
@@ -454,9 +385,11 @@ Visualize_Arm_Tools::Visualize_Arm_Tools(ros::NodeHandle& nh, const Robot& robot
                 miImageRows(height),
                 mCalib(calib)
 {
-    collision_spheres_pub = nh.advertise<visualization_msgs::Marker>("collision_spheres", 1);
+    // collision_spheres_pub = nh.advertise<visualization_msgs::Marker>("collision_spheres", 1);
     arm_link_spheres_pub = nh.advertise<visualization_msgs::Marker>("arm_spheres", 1);
-    bbox_plane_pub = nh.advertise<visualization_msgs::Marker>("bbox_plane", 1);
+    // bbox_plane_pub = nh.advertise<visualization_msgs::Marker>("bbox_plane", 1);
+    collision_spheres_pub = nh.advertise<visualization_msgs::MarkerArray>("collision_spheres", 10);
+    bbox_plane_pub = nh.advertise<visualization_msgs::MarkerArray>("endpoint_bbox_plane", 10);
 
     mRobotPose = Eigen::Matrix4f::Identity();
 }
@@ -480,9 +413,11 @@ void Visualize_Arm_Tools::Run() {
 
     while (1) {
         std::vector<double> joint_angles = move_group_.getCurrentJointValues();
-        Eigen::Matrix<double, 7, 1> config;
-        config << joint_angles[0], joint_angles[1], joint_angles[2], joint_angles[3], joint_angles[4], joint_angles[5],
-                joint_angles[6];
+        Eigen::Matrix<double, 6, 1> config;
+        config << joint_angles[0], -1*joint_angles[1], -1*joint_angles[2], joint_angles[3], -1*joint_angles[4], joint_angles[5];
+
+        std::cout<< "   [zhjd-debug] Current joint angles: " << config.transpose() <<std::endl;
+
         publish_collision_spheres(config);
         publish_arm_link_spheres(config);
         visualize_plane_triangle_bypoint(config);
@@ -493,11 +428,63 @@ void Visualize_Arm_Tools::Run() {
 
 //发布机械臂的球体
 
-void Visualize_Arm_Tools::publish_collision_spheres(const Eigen::Matrix<double, 7, 1> &conf) {
+// void Visualize_Arm_Tools::publish_collision_spheres(const Eigen::Matrix<double, 6, 1> &conf) {
+//     // run forward kinematics of this configuration
+//     std::vector<Point3> sph_centers;
+//     std::vector<gtsam::Matrix> J_px_jp;
+//     robot_.sphereCenters(conf, sph_centers);
+
+//     // for each point on arm stick, get error
+//     for (int sph_idx = 0; sph_idx < robot_.nr_body_spheres(); sph_idx++) {
+//         // 避障球 半径
+//         const double total_eps = robot_.sphere_radius(sph_idx);
+//         // 避障球 中心坐标
+//         const gtsam::Point3 &point = sph_centers[sph_idx];
+
+//         visualization_msgs::Marker marker;
+//         marker.header.frame_id = default_frame_; // Assuming the frame_id is "base_link"
+//         marker.header.stamp = ros::Time::now();
+//         marker.ns = "collision_spheres";
+//         marker.id = sph_idx;
+//         marker.type = visualization_msgs::Marker::SPHERE;
+//         marker.action = visualization_msgs::Marker::ADD;
+
+//         // Set position
+//         marker.pose.position.x = point.x();
+//         marker.pose.position.y = point.y();
+//         marker.pose.position.z = point.z();
+
+//         // Set orientation
+//         marker.pose.orientation.x = 0.0;
+//         marker.pose.orientation.y = 0.0;
+//         marker.pose.orientation.z = 0.0;
+//         marker.pose.orientation.w = 1.0;
+
+//         // Set scale (diameter)
+//         marker.scale.x = total_eps * 2.0;
+//         marker.scale.y = total_eps * 2.0;
+//         marker.scale.z = total_eps * 2.0;
+
+//         // Set color (red)
+//         marker.color.a = 0.7;
+//         marker.color.r = 1.0;
+//         marker.color.g = 1.0;
+//         marker.color.b = 0.0;
+
+//         marker.lifetime = ros::Duration(); // Persistent marker
+
+//         collision_spheres_pub.publish(marker);
+//     }
+// }
+
+// 修改发布函数
+void Visualize_Arm_Tools::publish_collision_spheres(const Eigen::Matrix<double, 6, 1> &conf) {
     // run forward kinematics of this configuration
     std::vector<Point3> sph_centers;
-    std::vector<gtsam::Matrix> J_px_jp;
     robot_.sphereCenters(conf, sph_centers);
+
+    // 创建 MarkerArray
+    visualization_msgs::MarkerArray marker_array;
 
     // for each point on arm stick, get error
     for (int sph_idx = 0; sph_idx < robot_.nr_body_spheres(); sph_idx++) {
@@ -507,7 +494,7 @@ void Visualize_Arm_Tools::publish_collision_spheres(const Eigen::Matrix<double, 
         const gtsam::Point3 &point = sph_centers[sph_idx];
 
         visualization_msgs::Marker marker;
-        marker.header.frame_id = default_frame_; // Assuming the frame_id is "base_link"
+        marker.header.frame_id = default_frame_;
         marker.header.stamp = ros::Time::now();
         marker.ns = "collision_spheres";
         marker.id = sph_idx;
@@ -530,7 +517,7 @@ void Visualize_Arm_Tools::publish_collision_spheres(const Eigen::Matrix<double, 
         marker.scale.y = total_eps * 2.0;
         marker.scale.z = total_eps * 2.0;
 
-        // Set color (red)
+        // Set color (yellow)
         marker.color.a = 0.7;
         marker.color.r = 1.0;
         marker.color.g = 1.0;
@@ -538,12 +525,16 @@ void Visualize_Arm_Tools::publish_collision_spheres(const Eigen::Matrix<double, 
 
         marker.lifetime = ros::Duration(); // Persistent marker
 
-        collision_spheres_pub.publish(marker);
+        // 添加到数组
+        marker_array.markers.push_back(marker);
     }
+
+    // 一次性发布所有 marker
+    collision_spheres_pub.publish(marker_array);
 }
 
 
-void Visualize_Arm_Tools::publish_arm_link_spheres(const Eigen::Matrix<double, 7, 1> &conf) {
+void Visualize_Arm_Tools::publish_arm_link_spheres(const Eigen::Matrix<double, 6, 1> &conf) {
     // run forward kinematics of this configuration
     // 机械臂endlink的位姿
     std::vector<Pose3> joint_pos; //  link poses in 3D work space
@@ -646,10 +637,10 @@ std::vector<std::vector<geometry_msgs::Point> > Visualize_Arm_Tools::GenerateBbo
     // 1. ROBOT pose
     // 相机相对于endlink的位姿
     Eigen::Matrix4f T_endlink_to_c;
-    T_endlink_to_c << 0, 0, 1, 0.02,
-            -1, 0, 0, -0.013,
-            0, -1, 0, 0.07, //实际为0.13，改为0.07
-            0, 0, 0, 1;
+    T_endlink_to_c <<   0, 0, -1, 0.02,
+                        1, 0, 0, -0.013,
+                        0, -1, 0, 0.07, //实际为0.13，改为0.07
+                        0, 0, 0, 1;
     // 机械臂endlink的位姿
     std::vector<Pose3> joint_pos; //  link poses in 3D work space
     std::vector<gtsam::Matrix> J_jpx_jp; //  et al. optional Jacobians
@@ -721,25 +712,27 @@ std::vector<std::vector<geometry_msgs::Point> > Visualize_Arm_Tools::GenerateBbo
 
 // 以三角的形式显示平面
 void Visualize_Arm_Tools::visualize_plane_triangle_bypoint(const typename Robot::Pose &conf) {
-    std::vector<std::vector<geometry_msgs::Point> > BboxPlanesTrianglePointsInWorld =
+
+    std::vector<std::vector<geometry_msgs::Point>> BboxPlanesTrianglePointsInWorld =
             GenerateBboxPlanesTrianglePoints(conf);
 
+    // 创建 MarkerArray
+    visualization_msgs::MarkerArray marker_array;
 
     for (int i = 0; i < BboxPlanesTrianglePointsInWorld.size(); i++) {
         auto points = BboxPlanesTrianglePointsInWorld[i];
 
         visualization_msgs::Marker marker;
-        marker.header.frame_id = default_frame_; // 使用世界坐标系
+        marker.header.frame_id = default_frame_;
         marker.header.stamp = ros::Time::now();
         marker.ns = "endpoint_bbox_plane";
         marker.id = i;
-        marker.type = visualization_msgs::Marker::TRIANGLE_LIST; // 使用三角形列表
-        // marker.type = visualization_msgs::Marker::POINTS;
+        marker.type = visualization_msgs::Marker::TRIANGLE_LIST;
         marker.action = visualization_msgs::Marker::ADD;
 
         // 设置颜色和透明度
-        marker.color.a = 0.2; // 不透明
-        marker.color.r = 1.0; // 红色
+        marker.color.a = 0.2;
+        marker.color.r = 1.0;
         marker.color.g = 0.0;
         marker.color.b = 0.0;
 
@@ -748,41 +741,12 @@ void Visualize_Arm_Tools::visualize_plane_triangle_bypoint(const typename Robot:
         marker.scale.y = 1.0;
         marker.scale.z = 1.0;
 
-        // std::vector<geometry_msgs::Point> points;
-
-        // // 生成平面上的点
-        // points.push_back(plane[0]);
-        // points.push_back(plane[1]);
-        // points.push_back(plane[2]);
         marker.points = points;
 
-        // 发布Marker消息
-        bbox_plane_pub.publish(marker);
+        // 添加到数组，而不是直接发布
+        marker_array.markers.push_back(marker);
     }
 
-
-    // DEBUG 端点
-    // // 创建一个 Marker 消息
-    // visualization_msgs::Marker points_marker;
-    // points_marker.header.frame_id = default_frame_;  // 修改为你的坐标系
-    // points_marker.header.stamp = ros::Time::now();
-    // points_marker.ns = "points_ns";
-    // points_marker.id = 0;
-    // points_marker.type = visualization_msgs::Marker::POINTS;  // 设置 Marker 类型为 POINTS
-    // points_marker.action = visualization_msgs::Marker::ADD;
-    // // 设置点的颜色和大小
-    // points_marker.scale.x = 0.1;  // 点的大小
-    // points_marker.scale.y = 0.1;  // 点的大小
-    // points_marker.color.r = 1.0;  // 红色
-    // points_marker.color.g = 0.0;  // 绿色
-    // points_marker.color.b = 0.0;  // 蓝色
-    // points_marker.color.a = 1.0;  // 透明度
-    // // 遍历点集合，添加所有点到 Marker 的 points 数组中
-    // for (const auto& point_vector : BboxPlanesTrianglePointsInWorld) {
-    //     for (const auto& point : point_vector) {
-    //         points_marker.points.push_back(point);
-    //     }
-    // }
-    // // 发布 Marker
-    // bbox_plane_pub.publish(points_marker);
+    // 一次性发布所有平面
+    bbox_plane_pub.publish(marker_array);
 }
