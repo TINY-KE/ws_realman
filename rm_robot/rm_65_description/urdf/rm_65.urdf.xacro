@@ -4,6 +4,26 @@
 <xacro:include filename="$(find rm_65_description)/urdf/rm_65.gazebo.xacro"/>
 
 <!-- =========================== 添加虚拟根链接解决KDL问题 =========================== -->
+<xacro:property name="wheel_radius" value="0.05" />  <!-- 轮子半径 -->
+<xacro:property name="wheel_length" value="0.03" />
+<!-- KINECT DK 相机 -->
+<xacro:property name="kinect_dk_box_width" value="0.1" />   
+<xacro:property name="kinect_dk_box_length" value="0.14" />  
+<xacro:property name="kinect_dk_box_height" value="0.04" /> 
+<xacro:property name="kinect_pose_h" value="0.035" /> 
+
+<material name="yellow">
+  <color rgba="1 1 0 1"/> </material>
+
+<material name="red">
+  <color rgba="1 0.2 0.2 0.5"/> </material>
+
+<material name="blue">
+  <color rgba="0.2 0.2 1  0.5"/> </material>
+
+<material name="black">
+  <color rgba="0 0 0 1"/>
+</material>
 
 <!-- 修改原来的base_link_wheeltec惯性参数 -->
 <link name="base_link_wheeltec">
@@ -34,7 +54,7 @@
           <box size="0.5 0.4 0.3"/>  <!-- 长×宽×高：50cm×40cm×13cm -->
       </geometry>
       <material name="white">
-          <color rgba="1 1 0 1"/>
+          <color rgba="0.7 0.7 0.7 1"/>    <!-- 底盘颜色 -->
       </material>
   </visual>
   <collision>
@@ -58,7 +78,7 @@
 <!-- 修改轮子关节类型：continuous -> revolute -->
 <!-- 前左轮 -->
 <joint name="left_front_joint" type="revolute">
-  <origin xyz="0.191 0.202  0.0375" rpy="1.57 0 0"/>
+  <origin xyz="0.191 0.202  ${wheel_radius}" rpy="1.57 0 0"/>
   <parent link="base_link_wheeltec"/>
   <child link="left_front_link"/>
   <axis xyz="0 1 0"/>
@@ -80,7 +100,7 @@
   <visual>
     <origin xyz="0 0 0" rpy="0 0 0" />
     <geometry>
-      <cylinder radius="0.0375" length="0.03"/>
+      <cylinder radius="${wheel_radius}" length="0.03"/>
     </geometry>
     <material name="black">
       <color rgba="0 0 0 1"/>
@@ -89,14 +109,14 @@
   <collision>
     <origin xyz="0 0 0" rpy="0 0 0" />
     <geometry>
-      <cylinder radius="0.0375" length="0.03"/>
+      <cylinder radius="${wheel_radius}" length="0.03"/>
     </geometry>
   </collision>
 </link>
 
 <!-- 前右轮 -->
 <joint name="right_front_joint" type="revolute">
-  <origin xyz="0.191 -0.202  0.0375" rpy="1.57 0 0"/>
+  <origin xyz="0.191 -0.202  ${wheel_radius}" rpy="1.57 0 0"/>
   <parent link="base_link_wheeltec"/>
   <child link="right_front_link"/>
   <axis xyz="0 1 0"/>
@@ -118,7 +138,7 @@
   <visual>
     <origin xyz="0 0 0" rpy="0 0 0" />
     <geometry>
-      <cylinder radius="0.0375" length="0.03"/>
+      <cylinder radius="${wheel_radius}" length="0.03"/>
     </geometry>
     <material name="black">
       <color rgba="0 0 0 1"/>
@@ -127,14 +147,14 @@
   <collision>
     <origin xyz="0 0 0" rpy="0 0 0" />
     <geometry>
-      <cylinder radius="0.0375" length="0.03"/>
+      <cylinder radius="${wheel_radius}" length="0.03"/>
     </geometry>
   </collision>
 </link>
 
 <!-- 后左轮 -->
 <joint name="left_wheel_joint" type="revolute">
-  <origin xyz="-0.191 0.202  0.0375" rpy="1.57 0 0"/>
+  <origin xyz="-0.191 0.202  ${wheel_radius}" rpy="1.57 0 0"/>
   <parent link="base_link_wheeltec"/>
   <child link="left_wheel_link"/>
   <axis xyz="0 1 0"/>
@@ -156,7 +176,7 @@
   <visual>
     <origin xyz="0 0 0" rpy="0 0 0" />
     <geometry>
-      <cylinder radius="0.0375" length="0.03"/>
+      <cylinder radius="${wheel_radius}" length="0.03"/>
     </geometry>
     <material name="black">
       <color rgba="0 0 0 1"/>
@@ -165,14 +185,14 @@
   <collision>
     <origin xyz="0 0 0" rpy="0 0 0" />
     <geometry>
-      <cylinder radius="0.0375" length="0.03"/>
+      <cylinder radius="${wheel_radius}" length="0.03"/>
     </geometry>
   </collision>
 </link>
 
 <!-- 后右轮 -->
 <joint name="right_wheel_joint" type="revolute">
-  <origin xyz="-0.191 -0.202  0.0375" rpy="1.57 0 0"/>
+  <origin xyz="-0.191 -0.202  ${wheel_radius}" rpy="1.57 0 0"/>
   <parent link="base_link_wheeltec"/>
   <child link="right_wheel_link"/>
   <axis xyz="0 1 0"/>
@@ -194,7 +214,7 @@
   <visual>
     <origin xyz="0 0 0" rpy="0 0 0" />
     <geometry>
-      <cylinder radius="0.0375" length="0.03"/>
+      <cylinder radius="${wheel_radius}" length="0.03"/>
     </geometry>
     <material name="black">
       <color rgba="0 0 0 1"/>
@@ -203,7 +223,7 @@
   <collision>
     <origin xyz="0 0 0" rpy="0 0 0" />
     <geometry>
-      <cylinder radius="0.0375" length="0.03"/>
+      <cylinder radius="${wheel_radius}" length="0.03"/>
     </geometry>
   </collision>
 </link>
@@ -642,6 +662,40 @@
     velocity="3.92" />
 	<dynamics damping="50" friction="1"/>
 </joint>
+
+<!-- kinect dk 相机 -->
+<link name="kinect_dk_camera_link">
+  <visual>
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <geometry>
+      <box size="${kinect_dk_box_width} ${kinect_dk_box_length} ${kinect_dk_box_height}" />
+    </geometry>
+    <material name="blue"/>
+  </visual>
+  <collision>
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <geometry>
+      <box size="${kinect_dk_box_width} ${kinect_dk_box_length} ${kinect_dk_box_height}" />
+    </geometry>
+  </collision>
+  <inertial>
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <mass value="0.5" /> <inertia
+      ixx="${0.5 * (kinect_dk_box_length*kinect_dk_box_length + kinect_dk_box_height*kinect_dk_box_height)}"
+      ixy="0.0"
+      ixz="0.0"
+      iyy="${0.5 * (kinect_dk_box_width*kinect_dk_box_width + kinect_dk_box_height*kinect_dk_box_height)}"
+      iyz="0.0"
+      izz="${0.5 * (kinect_dk_box_width*kinect_dk_box_width + kinect_dk_box_length*kinect_dk_box_length)}" />
+  </inertial>
+</link>
+
+<joint name="kinect_dk_camera_joint" type="fixed">
+  <origin xyz="0  0.0 ${kinect_pose_h}" rpy="0 0 0"/> 
+  <parent link="Link6"/>
+  <child link="kinect_dk_camera_link"/>
+</joint>
+
 
 <!-- =========================== Transmission and Control =========================== -->
 <!-- Transmissions for ROS Control -->

@@ -639,7 +639,7 @@ std::vector<std::vector<geometry_msgs::Point> > Visualize_Arm_Tools::GenerateBbo
     Eigen::Matrix4f T_endlink_to_c;
     T_endlink_to_c <<   0, 0, -1, 0.02,
                         1, 0, 0, -0.013,
-                        0, -1, 0, 0.07, //实际为0.13，改为0.07
+                        0, -1, 0, 0.04, //实际为0.13，改为0.07
                         0, 0, 0, 1;
     // 机械臂endlink的位姿
     std::vector<Pose3> joint_pos; //  link poses in 3D work space

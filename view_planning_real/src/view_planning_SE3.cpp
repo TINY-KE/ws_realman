@@ -209,7 +209,7 @@ int main(int argc, char** argv)
     if(argc>1)
         FovDecrease = atoi(argv[1]);
     // int FovDecrease = 20;  //为了可视化效果好，减小   
-    double FOVDepth = 4.0; // 1.0用于截图， 6.0用于建图
+    double FOVDepth = 1.0; // 1.0用于截图， 6.0用于建图
     // 地图
     ObjectMap *map = new ObjectMap(nh);
     std::thread *mptMap;
