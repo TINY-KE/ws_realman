@@ -44,6 +44,8 @@
         <joint name="joint5" value="0.8023" />
         <joint name="joint6" value="0" />
     </group_state>
+
+
     
     <!-- 5. 碰撞排除矩阵 -->
     <!-- 机械臂内部碰撞排除（保持原有） -->

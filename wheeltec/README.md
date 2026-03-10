@@ -24,8 +24,8 @@ roslaunch wheeltec_robot_rc keyboard_teleop.launch
 
 
 + 机械臂
-roslaunch rm_control rm_control.launch 
-roslaunch rm_bringup rm_robot.launch 
+// roslaunch rm_control rm_control.launch 
+// roslaunch rm_bringup rm_robot.launch 
 roslaunch rm_bringup rm_robot_bringup_and_control.launch   # 只运行着一个就行
   + 在 /home/robotlab/ws_realman/src/rm_robot/rm_65_description/urdf/rm_65.urdf.xacro  中加入了机器人底盘和相机
 + 实机视点规划
