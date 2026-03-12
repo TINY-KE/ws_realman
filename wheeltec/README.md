@@ -1,6 +1,6 @@
 # 真实机器人
 + 启动底盘
- roslaunch turn_on_wheeltec_robot turn_on_wheeltec_robot.launch 
+roslaunch turn_on_wheeltec_robot turn_on_wheeltec_robot.launch 
 
     + 修改urdf：   mini_4wd_robot.urdf 中 base_link的名字
     + 修改 robot_model_visualization.launch中 base_link的名字
@@ -10,7 +10,7 @@
 
 
 + 雷达
- roslaunch urg_node urg_lidar.launch 
+roslaunch urg_node urg_lidar.launch 
 
 + KINECT dk 相机
 roslaunch azure_kinect_ros_driver driver.launch  # 使用的是/rgb/image_raw /depth_to_rgb/image_raw
@@ -25,11 +25,16 @@ roslaunch wheeltec_robot_rc keyboard_teleop.launch
 
 + 机械臂
 // roslaunch rm_control rm_control.launch 
-// roslaunch rm_bringup rm_robot.launch 
+// roslaunch rm_bringup rm_robot.launch  # rm_65_moveit_config/launch/demo_realrobot.launch
 roslaunch rm_bringup rm_robot_bringup_and_control.launch   # 只运行着一个就行
   + 在 /home/robotlab/ws_realman/src/rm_robot/rm_65_description/urdf/rm_65.urdf.xacro  中加入了机器人底盘和相机
+    + planning_context.launch
+    + /home/robotlab/ws_realman/src/rm_robot/rm_65_moveit_config/launch/move_group.launch
+    + /home/robotlab/ws_realman/src/rm_robot/rm_65_moveit_config/launch/demo_realrobot.launch
+
 + 实机视点规划
-rosrun view_planning_real view_planning_real
+<!-- rosrun view_planning_real view_planning_real -->
+rosrun view_planning_real view_planning_SE3
 
 + 
 rostopic pub /object_centor geometry_msgs/PointStamped "header:
