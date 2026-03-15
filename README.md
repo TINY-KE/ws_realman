@@ -4,7 +4,7 @@
 
 # 真实机器人
 + 启动底盘
- roslaunch turn_on_wheeltec_robot turn_on_wheeltec_robot.launch 
+roslaunch turn_on_wheeltec_robot turn_on_wheeltec_robot.launch 
 
     + 修改urdf mini_4wd_robot.urdf 中 base_link的名字
     + 修改 robot_model_visualization.launch中 base_link的名字
@@ -18,7 +18,7 @@ roslaunch wheeltec_robot_rc keyboard_teleop.launch
 
 
 + 雷达
- roslaunch urg_node urg_lidar.launch 
+roslaunch urg_node urg_lidar.launch 
 
 <!-- + KINECT dk 相机
 roslaunch azure_kinect_ros_driver driver.launch -->
@@ -35,10 +35,14 @@ roslaunch rm_bringup rm_robot.launch  -->
 roslaunch rm_bringup rm_robot_bringup_and_control.launch 
 
 + 实机视点规划
-rosrun view_planning_real 
+rosrun view_planning_real  view_planning_SE3
 
 + 
 rostopic pub /object_ellipsoid std_msgs/Float64MultiArray "data: [1.0, 0.0, 0.5,    0, 0, 0,   1, 2, 1 ]"
+rostopic pub /object_ellipsoid std_msgs/Float64MultiArray "data: [3.0, 1.8, 0.5,    0, 0, 0,   1, 1.5, 1 ]"  # 7FLOOR 椭球体
+rostopic pub /object_ellipsoid std_msgs/Float64MultiArray "data: [2.7, 1.8, 0.5,    0, 0, 0,   1.8, 1.5, 1 ]"  # 7FLOOR 椭球体
+rostopic pub -1 /object_ellipsoid std_msgs/Float64MultiArray "data: [2.7, 1.8, 0.5,    0, 0, 0,   2, 1.8, 1 ]"  # 7FLOOR 椭球体
+rostopic pub -1 /object_ellipsoid std_msgs/Float64MultiArray "data: [2, 0, 0.5,    0, 0, 0,   1.9, 1.8, 1 ]"  # 7FLOOR 椭球体
 
 rostopic pub /stop_loop std_msgs/Bool  "data: false" 
 

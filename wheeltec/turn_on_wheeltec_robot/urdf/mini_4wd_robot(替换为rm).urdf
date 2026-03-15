@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <robot name="wheeltec_robot">
 
-    <link name="base_link">
+    <!-- <link name="base_link_wheeltec">
         <visual>
             <origin xyz=" 0 0 0.0975" rpy="0 0 0" />
             <geometry>
@@ -11,11 +11,25 @@
                 <color rgba="1 1 1 1"/>
             </material>
         </visual>
+    </link>    -->
+
+    <!-- 只修改底盘外壳尺寸：40cm宽(0.4m)，50cm长(0.5m)，13cm高(0.13m) -->
+    <!-- 轮子位置保持不变 -->
+    <link name="base_link_wheeltec">
+        <visual>
+            <origin xyz="0 0 0.065" rpy="0 0 0" />  <!-- 高度中心：13cm/2=6.5cm -->
+            <geometry>
+                <box size="0.5 0.4 0.13"/>  <!-- 长×宽×高：50cm×40cm×13cm -->
+            </geometry>
+            <material name="white">
+                <color rgba="1 1 1 1"/>
+            </material>
+        </visual>
     </link>   
 
     <joint name="left_wheel_joint" type="continuous">
         <origin xyz="-0.085 0.09 0.0375" rpy="1.57 0 0"/>
-        <parent link="base_link"/>
+        <parent link="base_link_wheeltec"/>
         <child link="left_wheel_link"/>
         <axis xyz="0 1 0"/>
     </joint>
@@ -34,7 +48,7 @@
 
     <joint name="right_wheel_joint" type="continuous">
         <origin xyz="-0.085 -0.09 0.0375" rpy="1.57 0 0"/>
-        <parent link="base_link"/>
+        <parent link="base_link_wheeltec"/>
         <child link="right_wheel_link"/>
         <axis xyz="0 1 0"/>
     </joint>
@@ -53,7 +67,7 @@
 
       <joint name="left_front_joint" type="continuous">
         <origin xyz="0.085 0.09 0.0375" rpy="1.57 0 0"/>
-        <parent link="base_link"/>
+        <parent link="base_link_wheeltec"/>
         <child link="left_front_link"/>
         <axis xyz="0 1 0"/>
     </joint>
@@ -72,7 +86,7 @@
 
     <joint name="right_front_joint" type="continuous">
         <origin xyz="0.085 -0.09 0.0375" rpy="1.57 0 0"/>
-        <parent link="base_link"/>
+        <parent link="base_link_wheeltec"/>
         <child link="right_front_link"/>
         <axis xyz="0 1 0"/>
     </joint>

@@ -156,21 +156,6 @@ int main(int argc, char** argv) {
         // 生成 5 个视点，高度设为 1.1m (0.7 + 0.4)
         auto viewpoints = generateScanningViewpoints(obj_in_base, 5, 1.1);
 
-        visual_tools.deleteAllMarkers();
-
-        for (size_t i = 0; i < viewpoints.size(); ++i)
-        {
-            visual_tools.publishSphere(
-                viewpoints[i].position,
-                rviz_visual_tools::BLUE,
-                rviz_visual_tools::MEDIUM,
-                "vp_sphere_" + std::to_string(i));
-
-            visual_tools.publishAxisLabeled(
-                viewpoints[i],
-                "vp_" + std::to_string(i));
-        }
-        
         for (size_t i = 0; i < viewpoints.size(); ++i) {
             if (!loop) break;
             

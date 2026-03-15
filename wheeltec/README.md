@@ -1,3 +1,5 @@
+# 融合 mini_4wd_robot.urdf 和  rm_65.urdf.xacro 
+
 # 真实机器人
 + 启动底盘
 roslaunch turn_on_wheeltec_robot turn_on_wheeltec_robot.launch 
@@ -17,7 +19,7 @@ roslaunch azure_kinect_ros_driver driver.launch  # 使用的是/rgb/image_raw /d
 
 
 + 激光建图
-source ~/ws_cartographer/devel_isolated/setup.bash && roslaunch cartographer_ros wheeltec_2d_real.launch 
+source ~/ws_cartographer/devel_isolated/setup.bash && roslaunch cartographer_ros c.launch 
 
 + 键盘 
 roslaunch wheeltec_robot_rc keyboard_teleop.launch
